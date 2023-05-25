@@ -26,13 +26,8 @@ from neuralprophet.data.process import (
 from neuralprophet.data.split import _make_future_dataframe, _maybe_extend_df
 from neuralprophet.data.transform import _normalize
 from neuralprophet.logger import MetricsLogger
-from neuralprophet.plot_forecast_matplotlib import plot, plot_components
-from neuralprophet.plot_forecast_plotly import plot as plot_plotly
-from neuralprophet.plot_forecast_plotly import plot_components as plot_components_plotly
-from neuralprophet.plot_model_parameters_matplotlib import plot_parameters
-from neuralprophet.plot_model_parameters_plotly import plot_parameters as plot_parameters_plotly
-from neuralprophet.plot_utils import get_valid_configuration, log_warning_deprecation_plotly, select_plotting_backend
 from neuralprophet.uncertainty import Conformal
+from neuralprophet.utils import import_plot_deps
 
 log = logging.getLogger("NP.forecaster")
 
@@ -1785,6 +1780,7 @@ class NeuralProphet:
         self.true_ar_weights = true_ar_weights
 
     def set_plotting_backend(self, plotting_backend: str):
+        import_plot_deps()
         """Set plotting backend.
 
         Parameters
@@ -1835,6 +1831,7 @@ class NeuralProphet:
         forecast_in_focus: Optional[int] = None,
         plotting_backend: Optional[str] = None,
     ):
+        import_plot_deps()
         """Plot the NeuralProphet forecast, including history.
 
         Parameters
@@ -2018,6 +2015,7 @@ class NeuralProphet:
         plot_history_data: Optional[bool] = None,
         plotting_backend: Optional[str] = None,
     ):
+        import_plot_deps()
         """Plot the latest NeuralProphet forecast(s), including history.
 
         Parameters
@@ -2122,6 +2120,7 @@ class NeuralProphet:
         plot_history_data: Optional[bool] = None,
         plotting_backend: Optional[str] = None,
     ):
+        import_plot_deps()
         args = locals()
         log.warning(
             "plot_last_forecast() has been renamed to plot_latest_forecast() and is therefore deprecated. "
@@ -2140,6 +2139,7 @@ class NeuralProphet:
         components: Union[None, str, List[str]] = None,
         one_period_per_season: bool = False,
     ):
+        import_plot_deps()
         """Plot the NeuralProphet forecast components.
 
         Parameters
@@ -2283,6 +2283,7 @@ class NeuralProphet:
         quantile: Optional[float] = None,
         components: Union[None, str, List[str]] = None,
     ):
+        import_plot_deps()
         """Plot the NeuralProphet forecast components.
 
         Parameters

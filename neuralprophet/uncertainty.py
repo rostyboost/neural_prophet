@@ -5,13 +5,6 @@ from typing import Any, List, Optional, Tuple, Union
 import matplotlib
 import pandas as pd
 
-from neuralprophet.plot_forecast_matplotlib import plot_interval_width_per_timestep, plot_nonconformity_scores
-from neuralprophet.plot_forecast_plotly import (
-    plot_interval_width_per_timestep as plot_interval_width_per_timestep_plotly,
-)
-from neuralprophet.plot_forecast_plotly import plot_nonconformity_scores as plot_nonconformity_scores_plotly
-from neuralprophet.plot_utils import log_warning_deprecation_plotly, select_plotting_backend
-
 
 @dataclass
 class Conformal:
@@ -225,6 +218,12 @@ class Conformal:
             return {"q_hat_sym": q_hat}
 
     def plot(self, plotting_backend=None):
+        from neuralprophet.plot_forecast_matplotlib import plot_interval_width_per_timestep, plot_nonconformity_scores
+        from neuralprophet.plot_forecast_plotly import (
+            plot_interval_width_per_timestep as plot_interval_width_per_timestep_plotly,
+        )
+        from neuralprophet.plot_forecast_plotly import plot_nonconformity_scores as plot_nonconformity_scores_plotly
+        from neuralprophet.plot_utils import log_warning_deprecation_plotly, select_plotting_backend
         """Apply a given conformal prediction technique to get the uncertainty prediction intervals (or q-hats).
 
         Parameters

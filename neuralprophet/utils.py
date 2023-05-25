@@ -22,6 +22,18 @@ if TYPE_CHECKING:
 log = logging.getLogger("NP.utils")
 
 
+def import_plot_deps():
+    try:
+        from neuralprophet.plot_forecast_matplotlib import plot, plot_components
+        from neuralprophet.plot_forecast_plotly import plot as plot_plotly
+        from neuralprophet.plot_forecast_plotly import plot_components as plot_components_plotly
+        from neuralprophet.plot_model_parameters_matplotlib import plot_parameters
+        from neuralprophet.plot_model_parameters_plotly import plot_parameters as plot_parameters_plotly
+        from neuralprophet.plot_utils import get_valid_configuration, log_warning_deprecation_plotly, select_plotting_backend
+    except ModuleNotFoundError:
+        raise Exception("Plotting dependencies were not installed in this fork. Please `pip install plotly==5.13.1 plotly-resampler==0.8.3.1 tensorboard==2.11.2`")
+
+
 def save(forecaster, path: str):
     """save a fitted np model to a disk file.
 
