@@ -607,7 +607,7 @@ class NeuralProphet:
         self.config_season.append(name=name, period=period, resolution=fourier_order, arg="custom")
         return self
 
-    def fit(self, df, freq="auto", validation_df=None, progress="bar", minimal=False):
+    def fit(self, df, freq="auto", validation_df=None, progress="bar", minimal=False, cb_early_stop = None):
         """Train, and potentially evaluate model.
 
         Training/validation metrics may be distorted in case of auto-regression,
@@ -663,7 +663,7 @@ class NeuralProphet:
             validation_df = None
         if validation_df is None:
             if minimal:
-                self._train_minimal(df, progress_bar=progress == "bar")
+                self._train_minimal(df, progress_bar=progress == "bar", cb_early_stop=cb_early_stop)
                 metrics_df = None
             else:
                 metrics_df = self._train(df, progress=progress)
@@ -2190,6 +2190,8 @@ class NeuralProphet:
                 Training Dataloader
         """
         self.model.train()
+        grad_norm_ema = None
+        loss_ema = None
         for i, (inputs, targets, meta) in enumerate(loader):
             # Run forward calculation
             predicted = self.model.forward(inputs)
@@ -2206,6 +2208,9 @@ class NeuralProphet:
             loss.backward()
             self.optimizer.step()
             self.scheduler.step()
+            grad_norm = torch.cat([p.grad.flatten() for p in self.model.parameters()]).norm()
+            grad_norm_ema = 0.9 * grad_norm_ema + 0.1 * grad_norm if grad_norm_ema is not None else grad_norm
+            loss_ema = 0.9 * loss_ema + 0.1 * loss.detach().item() if loss_ema is not None else loss.detach().item()
             if self.metrics is not None:
                 self.metrics.update(
                     predicted=predicted.detach()[:, :, 0],
@@ -2215,7 +2220,7 @@ class NeuralProphet:
         if self.metrics is not None:
             return self.metrics.compute(save=True)
         else:
-            return None
+            return grad_norm_ema, loss_ema
 
     def _add_batch_regularizations(self, loss, e, iter_progress):
         """Add regularization terms to loss, if applicable
@@ -2459,7 +2464,7 @@ class NeuralProphet:
                 metrics_df[f"{col}_val"] = metrics_df_val[col]
         return metrics_df
 
-    def _train_minimal(self, df, progress_bar=False):
+    def _train_minimal(self, df, progress_bar=False, cb_early_stop = None):
         """Execute minimal model training procedure for a configured number of epochs.
 
         Parameters
@@ -2481,10 +2486,15 @@ class NeuralProphet:
             )
         else:
             training_loop = range(self.config_train.epochs)
+        last_grad = None
+        last_loss = None
         for e in training_loop:
             if progress_bar:
                 training_loop.set_description(f"Epoch[{(e+1)}/{self.config_train.epochs}]")
-            _ = self._train_epoch(e, loader)
+            grad, loss = self._train_epoch(e, loader)
+            if cb_early_stop is not None and cb_early_stop(e, grad, loss):
+                log.info(f"Early stopping after epoch={e}")
+                break
 
     def _eval_true_ar(self):
         assert self.max_lags > 0
